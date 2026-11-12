@@ -1,6 +1,6 @@
 {
   "name": "grims-dm-command-center",
-  "version": "1.0.42",
+  "version": "1.0.43",
   "private": true,
   "description": "Grim’s DM Command Center — public Windows desktop application",
   "main": "main.js",
@@ -23,6 +23,7 @@
       "index.html",
       "welcome-scenes/**/*",
       "update-config.json",
+      "assets/**/*",
       "package.json"
     ],
     "directories": {
@@ -37,7 +38,8 @@
           ]
         }
       ],
-      "artifactName": "Grims-DM-Command-Center-${version}-${arch}.${ext}"
+      "artifactName": "Grims-DM-Command-Center-${version}-${arch}.${ext}",
+      "icon": "assets/grim-icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -46,7 +48,9 @@
       "createStartMenuShortcut": true,
       "deleteAppDataOnUninstall": false,
       "perMachine": false,
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "installerIcon": "assets/grim-icon.ico",
+      "uninstallerIcon": "assets/grim-icon.ico"
     },
     "publish": [
       {

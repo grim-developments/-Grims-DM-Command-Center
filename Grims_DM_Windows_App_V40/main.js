@@ -79,7 +79,7 @@ app.whenReady().then(()=>{
  autoUpdater.on('download-progress',p=>emit('downloading','Downloading update…',{percent:Math.round(p.percent)}));
  autoUpdater.on('update-downloaded',info=>{updateReady=true;emit('ready','Version '+info.version+' is ready to install.',{version:info.version});});
  autoUpdater.on('error',e=>emit('error',String(e.message||e)));
- win=new BrowserWindow({width:1500,height:940,minWidth:900,minHeight:600,show:false,backgroundColor:'#130c0a',autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
+ win=new BrowserWindow({width:1500,height:940,minWidth:900,minHeight:600,show:false,backgroundColor:'#130c0a',icon:path.join(__dirname,'assets','grim-icon.png'),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.js'),nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true}});
  win.loadFile(path.join(__dirname,'index.html'));
  win.once('ready-to-show',()=>{win.maximize();win.show();});
  win.webContents.setWindowOpenHandler(({url})=>{if(url.startsWith('file://')&&decodeURIComponent(url).toLowerCase().endsWith('.pdf'))return {action:'allow',overrideBrowserWindowOptions:{width:1100,height:900,autoHideMenuBar:true,backgroundColor:'#1a100d'}};if(/^https?:/.test(url))shell.openExternal(url);return {action:'deny'};});
