@@ -3,6 +3,11 @@ name: Build Windows Installer
 
 on:
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Existing release tag to repair (leave blank for a normal build)'
+        required: false
+        type: string
   push:
     tags:
       - 'v*'
@@ -27,13 +32,34 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Verify release tag matches package version
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Determine release tag
+        id: release
         shell: pwsh
+        env:
+          MANUAL_TAG: ${{ inputs.release_tag }}
+          GIT_REF: ${{ github.ref }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          $tag = ""
+          if ($env:MANUAL_TAG) {
+            $tag = $env:MANUAL_TAG.Trim()
+          } elseif ($env:GIT_REF.StartsWith("refs/tags/")) {
+            $tag = $env:REF_NAME
+          }
+          if ($tag -and $tag -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+$') {
+            throw "Invalid release tag: $tag"
+          }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+
+      - name: Verify release version
+        if: steps.release.outputs.tag != ''
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          if ("v$version" -ne "${{ github.ref_name }}") {
-            throw "Release tag must match package.json version."
+          if ("v$version" -ne $env:RELEASE_TAG) {
+            throw "package.json version $version does not match release $env:RELEASE_TAG"
           }
 
       - name: Install dependencies
@@ -53,13 +79,13 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npx electron-builder --win nsis --x64 --publish never
 
-      - name: Upload installer to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Upload files to GitHub Release
+        if: steps.release.outputs.tag != ''
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
         run: |
-          $tag = "${{ github.ref_name }}"
           $files = @(
             Get-ChildItem "dist" -File |
             Where-Object {
@@ -74,21 +100,21 @@ jobs:
           }
 
           if (-not ($files | Where-Object { $_ -like "*latest.yml" })) {
-            throw "Updater metadata latest.yml was not generated."
+            throw "latest.yml was not generated."
           }
 
-          gh release view $tag --repo "${{ github.repository }}"
+          gh release view $env:RELEASE_TAG --repo "${{ github.repository }}"
           if ($LASTEXITCODE -ne 0) {
-            throw "GitHub Release $tag does not exist."
+            throw "Release does not exist."
           }
 
-          gh release upload $tag @files --clobber --repo "${{ github.repository }}"
+          gh release upload $env:RELEASE_TAG @files --clobber --repo "${{ github.repository }}"
           if ($LASTEXITCODE -ne 0) {
-            throw "Failed to upload release assets."
+            throw "Failed to upload release files."
           }
 
       - name: Upload manual build artifact
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        if: steps.release.outputs.tag == ''
         uses: actions/upload-artifact@v4
         with:
           name: Grims-DM-Windows-Installer
