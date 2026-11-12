@@ -1,0 +1,63 @@
+{
+  "name": "grims-dm-command-center",
+  "version": "1.0.40",
+  "private": true,
+  "description": "Grim\u2019s DM Command Center \u2014 public Windows desktop application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win nsis --x64",
+    "release:win": "electron-builder --win nsis --x64 --publish always",
+    "test:syntax": "node --check main.js && node --check preload.js"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.grims.dmcommandcenter",
+    "productName": "Grims DM Command Center",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "welcome-scenes/**/*",
+      "Books/**/*",
+      "update-config.json",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Grims-DM-Command-Center-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "perMachine": false,
+      "runAfterFinish": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "REPLACE_WITH_GITHUB_OWNER",
+        "repo": "REPLACE_WITH_PUBLIC_REPO"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  }
+}

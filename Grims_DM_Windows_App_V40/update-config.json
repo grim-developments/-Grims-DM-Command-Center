@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "provider": "github",
+  "owner": "REPLACE_WITH_GITHUB_OWNER",
+  "repo": "REPLACE_WITH_PUBLIC_REPO",
+  "note": "Set enabled=true and enter a public GitHub repository before publishing; use GitHub Actions release workflow."
+}
