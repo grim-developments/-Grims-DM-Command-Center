@@ -1,8 +1,8 @@
 {
   "name": "grims-dm-command-center",
-  "version": "1.0.43",
+  "version": "1.0.44",
   "private": true,
-  "description": "Grim’s DM Command Center — public Windows desktop application",
+  "description": "Grims DM Screen — Windows desktop application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "com.grims.dmcommandcenter",
-    "productName": "Grims DM Command Center",
+    "productName": "Grims DM Screen",
     "files": [
       "main.js",
       "preload.js",

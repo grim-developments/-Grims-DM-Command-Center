@@ -3,7 +3,7 @@ const {autoUpdater}=require('electron-updater');
 const path=require('path'),fs=require('fs');
 const {pathToFileURL}=require('url');
 const config=require('./update-config.json');
-const APP_NAME='Grims DM Command Center';
+const APP_NAME='Grims DM Screen';
 app.setName(APP_NAME);
 // Never change this identifier or userData location in future releases.
 app.setPath('userData',path.join(app.getPath('appData'),'grims-dm-command-center'));
@@ -56,7 +56,7 @@ ipcMain.handle('grim:book-import',async(_e,id)=>{
 ipcMain.handle('grim:book-open',(_e,id)=>{
  const file=bookPath(id);
  if(!fs.existsSync(file))return {available:false};
- const reader=new BrowserWindow({width:1150,height:900,autoHideMenuBar:true,title:'Grim’s Handbook Reader',webPreferences:{sandbox:true,nodeIntegration:false,contextIsolation:true}});
+ const reader=new BrowserWindow({width:1150,height:900,autoHideMenuBar:true,title:'Grims DM Screen — Handbook Reader',webPreferences:{sandbox:true,nodeIntegration:false,contextIsolation:true}});
  reader.loadURL(pathToFileURL(file).href);
  return {available:true};
 });
