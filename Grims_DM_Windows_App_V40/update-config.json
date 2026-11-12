@@ -1,7 +1,7 @@
 {
-  "enabled": false,
+  "enabled": true,
   "provider": "github",
-  "owner": "REPLACE_WITH_GITHUB_OWNER",
-  "repo": "REPLACE_WITH_PUBLIC_REPO",
-  "note": "Set enabled=true and enter a public GitHub repository before publishing; use GitHub Actions release workflow."
+  "owner": "grim-developments",
+  "repo": "-Grims-DM-Command-Center",
+  "note": "Updates are served from published GitHub Releases. Unsigned installers require independent security review."
 }

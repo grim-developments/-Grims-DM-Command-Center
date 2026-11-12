@@ -1,8 +1,8 @@
 {
   "name": "grims-dm-command-center",
-  "version": "1.0.41",
+  "version": "1.0.42",
   "private": true,
-  "description": "Grim\u2019s DM Command Center \u2014 public Windows desktop application",
+  "description": "Grim’s DM Command Center — public Windows desktop application",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -51,8 +51,8 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "REPLACE_WITH_GITHUB_OWNER",
-        "repo": "REPLACE_WITH_PUBLIC_REPO"
+        "owner": "grim-developments",
+        "repo": "-Grims-DM-Command-Center"
       }
     ]
   },
