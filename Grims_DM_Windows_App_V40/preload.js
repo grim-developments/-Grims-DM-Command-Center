@@ -1,5 +1,8 @@
 const {contextBridge,ipcRenderer}=require('electron');
 contextBridge.exposeInMainWorld('grimDesktop',Object.freeze({
+ bookInfo:(id)=>ipcRenderer.invoke('grim:book-info',id),
+ importBook:(id)=>ipcRenderer.invoke('grim:book-import',id),
+ openBookWindow:(id)=>ipcRenderer.invoke('grim:book-open',id),
  backup:(snapshot)=>ipcRenderer.invoke('grim:backup',snapshot),
  listBackups:()=>ipcRenderer.invoke('grim:list-backups'),
  restoreBackup:(name)=>ipcRenderer.invoke('grim:restore-backup',name),

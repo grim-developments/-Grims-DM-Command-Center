@@ -1,6 +1,7 @@
 const {app,BrowserWindow,Menu,shell,ipcMain,dialog}=require('electron');
 const {autoUpdater}=require('electron-updater');
 const path=require('path'),fs=require('fs');
+const {pathToFileURL}=require('url');
 const config=require('./update-config.json');
 const APP_NAME='Grims DM Command Center';
 app.setName(APP_NAME);
@@ -29,6 +30,37 @@ ipcMain.handle('grim:restore-backup',(_e,name)=>{
  if(obj.format!=='grims-dm-localstorage-v1'||!obj.entries||typeof obj.entries!=='object')throw Error('Unsupported backup');
  return obj.entries;
 });
+
+// Private, user-owned PDFs. Never store them in the installation directory.
+const bookIds=['phb','mm','dmg'];
+const bookDir=()=>path.join(app.getPath('userData'),'imported-books');
+const bookPath=id=>{if(!bookIds.includes(id))throw Error('Unknown book');return path.join(bookDir(),id+'.pdf');};
+ipcMain.handle('grim:book-info',(_e,id)=>{
+ const file=bookPath(id);
+ return fs.existsSync(file)?{available:true,url:pathToFileURL(file).href}:{available:false};
+});
+ipcMain.handle('grim:book-import',async(_e,id)=>{
+ const dest=bookPath(id);
+ const result=await dialog.showOpenDialog(win,{title:'Import your PDF handbook',properties:['openFile'],filters:[{name:'PDF documents',extensions:['pdf']}]});
+ if(result.canceled||!result.filePaths.length)return {canceled:true};
+ const source=result.filePaths[0],stat=fs.statSync(source);
+ if(!stat.isFile()||stat.size<8||stat.size>300*1024*1024)throw Error('Choose a PDF under 300 MB.');
+ const fd=fs.openSync(source,'r'),header=Buffer.alloc(5);
+ try{fs.readSync(fd,header,0,5,0);}finally{fs.closeSync(fd);}
+ if(header.toString('ascii')!=='%PDF-')throw Error('The selected file is not a valid PDF.');
+ fs.mkdirSync(bookDir(),{recursive:true});
+ const tmp=dest+'.tmp';
+ try{fs.copyFileSync(source,tmp);fs.renameSync(tmp,dest);}catch(err){try{fs.unlinkSync(tmp);}catch{}throw err;}
+ return {available:true,url:pathToFileURL(dest).href};
+});
+ipcMain.handle('grim:book-open',(_e,id)=>{
+ const file=bookPath(id);
+ if(!fs.existsSync(file))return {available:false};
+ const reader=new BrowserWindow({width:1150,height:900,autoHideMenuBar:true,title:'Grim’s Handbook Reader',webPreferences:{sandbox:true,nodeIntegration:false,contextIsolation:true}});
+ reader.loadURL(pathToFileURL(file).href);
+ return {available:true};
+});
+
 function configured(){return config.enabled===true&&config.owner&&!config.owner.startsWith('REPLACE_')&&config.repo&&!config.repo.startsWith('REPLACE_');}
 function checkUpdates(){
  if(!app.isPackaged){emit('unavailable','Updates can only be checked in the installed app.');return {enabled:false};}

@@ -1,6 +1,6 @@
 {
   "name": "grims-dm-command-center",
-  "version": "1.0.40",
+  "version": "1.0.41",
   "private": true,
   "description": "Grim\u2019s DM Command Center \u2014 public Windows desktop application",
   "main": "main.js",
@@ -22,7 +22,6 @@
       "preload.js",
       "index.html",
       "welcome-scenes/**/*",
-      "Books/**/*",
       "update-config.json",
       "package.json"
     ],

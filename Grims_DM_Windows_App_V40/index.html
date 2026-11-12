@@ -723,7 +723,7 @@ body:has(.grim-full-book) #dmDashboard #content{height:calc(100dvh - 104px)!impo
 #splash > button#splashEnter:hover{filter:brightness(1.22)!important}
 #splash > button#splashEnter:focus-visible{outline:3px solid #ffe09b!important;outline-offset:5px!important}
 #splash .v36-welcome-ui{transform:translateY(-9vh)!important}
-</style></head><body><div id="grim-dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="grim-dialog-title"><div id="grim-dialog-box"><h2 id="grim-dialog-title">Grim's Command Center</h2><p id="grim-dialog-message"></p><input id="grim-dialog-input" autocomplete="off"><div id="grim-dialog-actions"><button id="grim-dialog-cancel" type="button">Cancel</button><button id="grim-dialog-ok" type="button" class="grim-primary">Confirm</button></div></div></div>
+</style><style id="v41-book-import-style">#grimBookBar{display:none!important}.grim-book-toolbar{flex-wrap:wrap;gap:8px}.grim-full-book{min-height:calc(100vh - 140px)}</style></head><body><div id="grim-dialog-backdrop" role="dialog" aria-modal="true" aria-labelledby="grim-dialog-title"><div id="grim-dialog-box"><h2 id="grim-dialog-title">Grim's Command Center</h2><p id="grim-dialog-message"></p><input id="grim-dialog-input" autocomplete="off"><div id="grim-dialog-actions"><button id="grim-dialog-cancel" type="button">Cancel</button><button id="grim-dialog-ok" type="button" class="grim-primary">Confirm</button></div></div></div>
 <script id="v34-dialog-system">
 const grimDialogQueue=[];let grimDialogBusy=false;
 function grimDialog(type,message,initial=''){
@@ -1051,14 +1051,36 @@ for(const id of ['phb','mm','dmg'])grimLoadSavedBook(id);
 </script><script id="v33-book-page-functions">
 const grimBookPageFiles={phb:{name:"Player's Handbook",path:"Books/Player%27s%20Handbook.pdf",pages:321},mm:{name:'Monster Manual',path:'Books/Monster%20Manual.pdf',pages:353},dmg:{name:"Dungeon Master's Guide",path:"Books/Dungeon%20Master%27s%20Guide.pdf",pages:320}};
 const grimFullBookPages={phb:1,mm:1,dmg:1};
-function grimBookPageHTML(id){const b=grimBookPageFiles[id];return `<section class="grim-full-book"><div class="grim-book-toolbar"><strong>📖 ${b.name}</strong><span class="grow"></span><button onclick="grimFullBookStep('${id}',-1)">◀ Previous</button><label>Page <input id="grimFullBookPage" type="number" min="1" max="${b.pages}" value="${grimFullBookPages[id]}" onchange="grimFullBookGo('${id}',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();grimFullBookGo('${id}',this.value);this.blur()}"></label><span>/ ${b.pages}</span><button onclick="grimFullBookStep('${id}',1)">Next ▶</button><button onclick="grimFullBookExternal('${id}')">Open separately ↗</button></div><iframe id="grimFullBookFrame" class="grim-book-frame" title="${b.name}" allowfullscreen></iframe><div class="grim-book-help">Use the PDF viewer toolbar for zoom, find/search and page navigation. Ctrl+F may depend on the PDF viewer.</div></section>`}
-function grimBookPageLoad(id){const frame=document.getElementById('grimFullBookFrame');if(!frame)return;const b=grimBookPageFiles[id];const src=b.path+'#page='+grimFullBookPages[id]+'&toolbar=1&navpanes=1';if(frame.getAttribute('src')!==src)frame.setAttribute('src',src)}
-function grimFullBookGo(id,p){grimFullBookPages[id]=Math.max(1,Math.min(grimBookPageFiles[id].pages,Math.floor(Number(p)||1)));grimBookPageLoad(id);const input=document.getElementById('grimFullBookPage');if(input)input.value=grimFullBookPages[id]}
+function grimBookPageHTML(id){const b=grimBookPageFiles[id];return `<section class="grim-full-book"><div class="grim-book-toolbar"><strong>📖 ${b.name}</strong><button type="button" onclick="grimImportFullBook('${id}')">＋ Import / Replace PDF</button><span class="grow"></span><button onclick="grimFullBookStep('${id}',-1)">◀ Previous</button><label>Page <input id="grimFullBookPage" type="number" min="1" value="${grimFullBookPages[id]}" onchange="grimFullBookGo('${id}',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();grimFullBookGo('${id}',this.value);this.blur()}"></label><span id="grimFullBookCount"></span><button onclick="grimFullBookStep('${id}',1)">Next ▶</button><button onclick="grimFullBookExternal('${id}')">Open separately ↗</button></div><div id="grimBookImportHint" style="display:none;text-align:center;padding:48px 20px;color:#e6c38a;font-size:18px">No PDF imported for this handbook yet.<p style="font-size:14px">Click ＋ Import / Replace PDF above and choose your own PDF. It stays on this computer and survives app updates.</p></div><iframe id="grimFullBookFrame" class="grim-book-frame" title="${b.name}" allowfullscreen></iframe><div class="grim-book-help">Use the PDF viewer toolbar for zoom and search. Imported books are private and are not uploaded to GitHub.</div></section>`}
+const grimDesktopBookUrls={};
+async function grimBookPageLoad(id){
+ const frame=document.getElementById('grimFullBookFrame');if(!frame||page!==id)return;
+ const hint=document.getElementById('grimBookImportHint');
+ try{
+   const info=window.grimDesktop?.bookInfo?await window.grimDesktop.bookInfo(id):{available:false};
+   if(page!==id||!frame.isConnected)return;
+   if(!info.available){frame.style.display='none';hint.style.display='block';frame.removeAttribute('src');return;}
+   frame.style.display='block';hint.style.display='none';
+   grimDesktopBookUrls[id]=info.url;
+   const src=info.url+'#page='+grimFullBookPages[id]+'&toolbar=1&navpanes=1';
+   if(frame.getAttribute('src')!==src)frame.setAttribute('src',src);
+ }catch(e){frame.style.display='none';hint.style.display='block';hint.textContent='Unable to load PDF: '+e.message;}
+}
+async function grimImportFullBook(id){
+ if(!window.grimDesktop?.importBook){alert('PDF import requires the updated Windows app.');return;}
+ try{
+  const result=await window.grimDesktop.importBook(id);
+  if(result?.canceled)return;
+  if(result?.available){grimFullBookPages[id]=1;await grimBookPageLoad(id);}
+ }catch(e){alert('Could not import PDF: '+e.message);}
+}
+function grimFullBookGo(id,p){grimFullBookPages[id]=Math.max(1,Math.floor(Number(p)||1));grimBookPageLoad(id);const input=document.getElementById('grimFullBookPage');if(input)input.value=grimFullBookPages[id]}
 function grimFullBookStep(id,delta){grimFullBookGo(id,grimFullBookPages[id]+delta)}
-function grimFullBookExternal(id){
- const href=new URL(grimBookPageFiles[id].path,location.href).href;
- const opened=window.open(href,'_blank');
- if(!opened)grimNotice('The separate PDF window was blocked. Use the app version with the updated window handler.');
+async function grimFullBookExternal(id){
+ try{
+  const result=await window.grimDesktop.openBookWindow(id);
+  if(!result?.available)alert('Import a PDF for this handbook first.');
+ }catch(e){alert('Could not open PDF window: '+e.message);}
 }
 </script><script id="v35-random-welcome">
 (function(){
